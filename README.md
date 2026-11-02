@@ -50,7 +50,7 @@ A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
 ## How it works
 
-![Original and stretched waveforms with the same cycle spacing](docs/images/how-it-works.svg)
+![Three steps: slice overlapping frames, spread them apart, and blend them into a longer sound with the same pitch](docs/images/how-it-works.svg)
 
 Time stretching changes **duration—and therefore tempo—but not pitch**. The sound is cut into overlapping snapshots, moved farther apart on the timeline, and blended back together.
 
