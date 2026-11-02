@@ -1,5 +1,8 @@
 //! Streaming, seeking, flushing, and fixed-length rendering.
 
+use alloc::vec::Vec;
+use core::mem;
+
 use super::{NOISE_FLOOR, SignalsmithStretch};
 use crate::fft::Complex;
 use crate::sample::{Sample, saturating_usize, sf, su};
@@ -104,7 +107,7 @@ impl<S: Sample> SignalsmithStretch<S> {
 
         self.seek(inputs, seek_samples, playback_rate);
 
-        let mut pre_roll = std::mem::take(&mut self.tmp_pre_roll_buffer);
+        let mut pre_roll = mem::take(&mut self.tmp_pre_roll_buffer);
         pre_roll.resize(output_latency * self.channels, S::zero());
         {
             let mut output_channels: Vec<&mut [S]> = pre_roll.chunks_mut(output_latency).collect();
@@ -176,7 +179,7 @@ impl<S: Sample> SignalsmithStretch<S> {
         }
 
         let tail_samples = output_samples - output_block;
-        let mut tail = std::mem::take(&mut self.tmp_process_buffer);
+        let mut tail = mem::take(&mut self.tmp_process_buffer);
         tail.resize(tail_samples, S::zero());
         self.stft.finish_output(S::one(), 0);
         for c in 0..self.channels {

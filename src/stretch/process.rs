@@ -172,7 +172,7 @@ impl<S: Sample> SignalsmithStretch<S> {
             for c in 0..self.channels {
                 let mut sample = S::zero();
                 self.stft
-                    .read_output(c, 0, std::slice::from_mut(&mut sample));
+                    .read_output(c, 0, core::slice::from_mut(&mut sample));
                 outputs[c][output_index] = sample;
             }
             self.stft.move_output(1);

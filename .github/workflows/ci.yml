@@ -20,6 +20,10 @@ jobs:
         run: cargo test --locked --all-targets --all-features
       - name: Release test
         run: cargo test --locked --release --all-targets --all-features
+      - name: no_std check
+        run: |
+          rustup target add riscv32imac-unknown-none-elf
+          cargo check --locked --no-default-features --features no_std --lib --target riscv32imac-unknown-none-elf
       - name: Doctests
         run: cargo test --locked --doc --all-features
       - name: Documentation

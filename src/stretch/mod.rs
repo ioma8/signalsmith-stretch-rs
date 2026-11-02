@@ -11,7 +11,9 @@
     reason = "DSP indexing and numerical structure are intentional"
 )]
 
-use std::sync::Arc;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::sample::{Sample, sf};
@@ -122,12 +124,21 @@ pub struct SignalsmithStretch<S: Sample = f32> {
     formant_base_freq: S,
 }
 
+#[cfg(feature = "std")]
+fn time_seed() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos() as u64)
+}
+
+#[cfg(not(feature = "std"))]
+const fn time_seed() -> u64 {
+    0
+}
+
 impl<S: Sample> Default for SignalsmithStretch<S> {
     fn default() -> Self {
-        let seed = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_or(0, |duration| duration.as_nanos() as u64);
-        Self::with_seed(seed)
+        Self::with_seed(time_seed())
     }
 }
 
@@ -136,7 +147,8 @@ impl<S: Sample> SignalsmithStretch<S> {
         self.channels != 0
     }
 
-    /// Creates a stretcher with a time-derived random seed.
+    /// Creates a stretcher with a time-derived seed under `std`, or seed `0`
+    /// under `no_std`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -188,5 +200,5 @@ impl<S: Sample> SignalsmithStretch<S> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests;

@@ -1,6 +1,9 @@
 //! Configuration, presets, and parameter setters.
 
-use std::sync::Arc;
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+use alloc::vec::Vec;
 
 use super::random::Pcg32;
 use super::{

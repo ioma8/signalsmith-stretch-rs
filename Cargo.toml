@@ -29,14 +29,17 @@ path = "tests/cli.rs"
 required-features = ["cli"]
 
 [features]
-default = []
-cli = ["dep:hound"]
+default = ["std"]
+std = ["num-traits/std", "num-complex/std"]
+libm = ["num-traits/libm", "num-complex/libm"]
+no_std = ["libm"]
+cli = ["dep:hound", "std"]
 
 [dependencies]
 hound = { version = "3.5.1", optional = true }
 microfft = { version = "0.6.0", default-features = false, features = ["size-32768"] }
-num-complex = "0.4.6"
-num-traits = "0.2.19"
+num-complex = { version = "0.4.6", default-features = false }
+num-traits = { version = "0.2.19", default-features = false }
 
 [lints.rust]
 unsafe_code = "forbid"

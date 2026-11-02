@@ -13,11 +13,16 @@
     reason = "DSP indexing and numerical structure are intentional"
 )]
 
-use std::convert::TryInto;
-use std::marker::PhantomData;
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+use alloc::vec::Vec;
+use core::convert::TryInto;
+use core::marker::PhantomData;
 
 use microfft::Complex32;
 pub(crate) use num_complex::Complex;
+#[cfg(not(feature = "std"))]
+use num_traits::Float;
 
 use crate::sample::Sample;
 
@@ -44,15 +49,15 @@ impl<S: Sample> RealFft<S> {
 
         let mut twiddles = Vec::with_capacity(half_size / 2 + 1);
         for i in 0..=half_size / 2 {
-            let phase = (i as f64 + 0.5) * (-2.0 * std::f64::consts::PI / size as f64)
-                - std::f64::consts::FRAC_PI_2;
+            let phase = (i as f64 + 0.5) * (-2.0 * core::f64::consts::PI / size as f64)
+                - core::f64::consts::FRAC_PI_2;
             let (sin, cos) = phase.sin_cos();
             twiddles.push(Complex32::new(cos as f32, sin as f32));
         }
 
         let mut half_bin_twists = Vec::with_capacity(half_size);
         for i in 0..half_size {
-            let phase = i as f64 * (-2.0 * std::f64::consts::PI / size as f64);
+            let phase = i as f64 * (-2.0 * core::f64::consts::PI / size as f64);
             let (sin, cos) = phase.sin_cos();
             half_bin_twists.push(Complex32::new(cos as f32, sin as f32));
         }
@@ -288,7 +293,7 @@ fn ifft(size: usize, buffer: &mut [Complex32]) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
 
@@ -299,7 +304,7 @@ mod tests {
             .map(|k| {
                 let mut sum = Complex::new(0.0, 0.0);
                 for (i, &x) in input.iter().enumerate() {
-                    let phase = -std::f64::consts::TAU * (i as f64) * (k as f64 + 0.5) / n as f64;
+                    let phase = -core::f64::consts::TAU * (i as f64) * (k as f64 + 0.5) / n as f64;
                     let (sin, cos) = phase.sin_cos();
                     sum += Complex::new(cos as f32, sin as f32) * x;
                 }

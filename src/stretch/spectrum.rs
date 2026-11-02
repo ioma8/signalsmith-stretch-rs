@@ -28,12 +28,12 @@ impl<S: Sample> SignalsmithStretch<S> {
                 let offset = channel * self.bands;
                 let phase0 = self.stft.bin_to_freq(S::zero())
                     * su::<S>(self.stft.default_interval())
-                    * sf(std::f64::consts::TAU);
+                    * sf(core::f64::consts::TAU);
                 let (sin0, cos0) = phase0.sin_cos();
                 let mut rot = Complex::new(cos0, sin0);
                 let freq_step = self.stft.bin_to_freq(S::one()) - self.stft.bin_to_freq(S::zero());
                 let phase_step =
-                    freq_step * su::<S>(self.stft.default_interval()) * sf(std::f64::consts::TAU);
+                    freq_step * su::<S>(self.stft.default_interval()) * sf(core::f64::consts::TAU);
                 let (sin_step, cos_step) = phase_step.sin_cos();
                 let rot_step = Complex::new(cos_step, sin_step);
 

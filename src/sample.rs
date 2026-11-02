@@ -1,7 +1,7 @@
 //! Sample-type abstraction used by the public API.
 
-use std::fmt::Debug;
-use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
+use core::fmt::Debug;
+use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
 use num_traits::{Float, FromPrimitive, ToPrimitive};
 

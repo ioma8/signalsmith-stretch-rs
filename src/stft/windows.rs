@@ -1,5 +1,8 @@
 //! Analysis and synthesis window shapes.
 
+#[cfg(not(feature = "std"))]
+use num_traits::Float;
+
 use crate::sample::{Sample, sf};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -61,7 +64,7 @@ impl Kaiser {
                     * (0.125
                         + inv
                             * (0.070_312_5 + inv * (0.073_242_187_5 + inv * 0.224_304_199_218_75)));
-            series / (std::f64::consts::TAU * x).sqrt()
+            series / (core::f64::consts::TAU * x).sqrt()
         }
     }
 
@@ -79,7 +82,7 @@ impl Kaiser {
         };
         let bandwidth = bandwidth.max(2.0);
         let alpha = (bandwidth * bandwidth * 0.25 - 1.0).sqrt();
-        let beta = alpha * std::f64::consts::PI;
+        let beta = alpha * core::f64::consts::PI;
         Self { beta }
     }
 

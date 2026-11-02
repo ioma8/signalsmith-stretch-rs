@@ -45,6 +45,19 @@ fn main() {
 
 `exact()` performs seek + process + flush, and returns `false` if the input is too short. A larger compiled example is in [`examples/basic.rs`](examples/basic.rs).
 
+## `no_std`
+
+The default `std` feature is optional:
+
+```toml
+[dependencies]
+signalsmith-stretch-rs = { version = "1.3", default-features = false, features = ["no_std"] }
+```
+
+`no_std` uses `alloc`, so the target must provide a global allocator. It also needs atomic compare-and-swap for `Arc` and `libm` for floating-point math. The CLI is only available with `std`.
+
+Without `std`, the default constructor seeds from zero. Use `with_seed()` for reproducible output.
+
 ## Streaming
 
 ```rust

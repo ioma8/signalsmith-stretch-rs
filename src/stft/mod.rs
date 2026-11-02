@@ -14,6 +14,11 @@
     reason = "DSP indexing and numerical structure are intentional"
 )]
 
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+use alloc::vec::Vec;
+use core::mem;
+
 use crate::fft::{Complex, RealFft};
 use crate::sample::{Sample, sf};
 
@@ -67,16 +72,16 @@ impl<S: Clone> Clone for StftOutput<S> {
 
 impl<S> StftOutput<S> {
     pub(crate) fn swap(&mut self, other: &mut Self) {
-        std::mem::swap(&mut self.pos, &mut other.pos);
-        std::mem::swap(&mut self.buffer, &mut other.buffer);
-        std::mem::swap(&mut self.window_products, &mut other.window_products);
+        mem::swap(&mut self.pos, &mut other.pos);
+        mem::swap(&mut self.buffer, &mut other.buffer);
+        mem::swap(&mut self.window_products, &mut other.window_products);
     }
 }
 
 impl<S> StftInput<S> {
     pub(crate) fn swap(&mut self, other: &mut Self) {
-        std::mem::swap(&mut self.pos, &mut other.pos);
-        std::mem::swap(&mut self.buffer, &mut other.buffer);
+        mem::swap(&mut self.pos, &mut other.pos);
+        mem::swap(&mut self.buffer, &mut other.buffer);
     }
 }
 
@@ -467,7 +472,7 @@ impl<S: Sample> DynamicStft<S> {
         }
         let spectrum =
             &self.spectrum_buffer[channel * self.fft_bins..(channel + 1) * self.fft_bins];
-        let mut time = std::mem::take(&mut self.time_buffer);
+        let mut time = mem::take(&mut self.time_buffer);
         self.fft.ifft(spectrum, &mut time[..self.fft_samples]);
 
         let output_wrap_index = self.block_samples - self.output.pos;

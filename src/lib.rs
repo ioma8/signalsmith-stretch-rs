@@ -6,9 +6,14 @@
 //!
 //! The implementation contains no `unsafe`, uses `microfft` for the FFT
 //! primitives, and is deterministic for a given seed and configuration.
+//! With the `no_std` feature it uses `alloc` and `libm`; the CLI requires
+//! `std`.
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+
+extern crate alloc;
 
 #[cfg(doctest)]
 #[doc = include_str!("../README.md")]
