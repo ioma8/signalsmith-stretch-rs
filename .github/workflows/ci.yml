@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+      - name: Test
+        run: cargo test --locked --all-targets --all-features
+      - name: Release test
+        run: cargo test --locked --release --all-targets --all-features
+      - name: Doctests
+        run: cargo test --locked --doc --all-features
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --locked --no-deps --all-features
+      - name: Package
+        run: cargo package --locked
