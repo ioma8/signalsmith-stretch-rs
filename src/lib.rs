@@ -4,7 +4,7 @@
 //! block sizes, then feed planar input and output buffers to
 //! [`SignalsmithStretch::process`].
 //!
-//! The implementation contains no `unsafe`, uses `rustfft` for the FFT
+//! The implementation contains no `unsafe`, uses `microfft` for the FFT
 //! primitives, and is deterministic for a given seed and configuration.
 
 #![forbid(unsafe_code)]

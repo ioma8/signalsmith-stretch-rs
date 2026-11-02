@@ -40,9 +40,10 @@ const SMOOTH_ENERGY_STEPS: usize = 3;
 
 /// Largest accepted STFT block size.
 ///
-/// This bounds the eager working-set allocation performed by [`SignalsmithStretch::configure`].
-/// The WAV CLI applies the same limit.
-pub const MAX_BLOCK_SAMPLES: usize = 1 << 20;
+/// The FFT is rounded up to the next power of two, up to the `microfft`
+/// maximum of 32,768. This bounds the eager working-set allocation performed
+/// by [`SignalsmithStretch::configure`]. The WAV CLI applies the same limit.
+pub const MAX_BLOCK_SAMPLES: usize = 32_768;
 
 /// Largest accepted channel count.
 pub const MAX_CHANNELS: usize = 256;

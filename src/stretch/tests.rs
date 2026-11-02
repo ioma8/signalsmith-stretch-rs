@@ -41,21 +41,6 @@ fn reset_reproduces_time_stretch() {
 }
 
 #[test]
-fn f64_processing_is_supported() {
-    let input: Vec<f64> = (0..1024)
-        .map(|i| (std::f64::consts::TAU * 190.0 * f64::from(i) / 1000.0).sin() * 0.3)
-        .collect();
-    let mut output = vec![0.0_f64; 1536];
-    let mut stretch = SignalsmithStretch::<f64>::with_seed(13);
-    stretch.configure(1, 64, 16, false);
-    stretch.set_transpose_semitones(3.0, 0.8);
-    let output_len = output.len();
-    assert!(stretch.exact(&[&input], input.len(), &mut [&mut output], output_len));
-    assert!(output.iter().all(|sample| sample.is_finite()));
-    assert!(output.iter().any(|sample| sample.abs() > 1e-4));
-}
-
-#[test]
 fn extreme_stretch_is_seeded() {
     let input = sine_input(2048, 137.0);
     let mut first = vec![0.0_f32; 4096];

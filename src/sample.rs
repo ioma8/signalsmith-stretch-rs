@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
 use num_traits::{Float, FromPrimitive, ToPrimitive};
-use rustfft::FftNum;
 
 mod sealed {
     pub trait Sealed {}
@@ -12,10 +11,9 @@ mod sealed {
 
 /// Floating-point sample type accepted by [`crate::SignalsmithStretch`].
 ///
-/// Both [`f32`] and [`f64`] are supported.
+/// Only [`f32`] is supported by the `microfft` backend.
 pub trait Sample:
     sealed::Sealed
-    + FftNum
     + Float
     + FromPrimitive
     + ToPrimitive
@@ -32,10 +30,8 @@ pub trait Sample:
 }
 
 impl sealed::Sealed for f32 {}
-impl sealed::Sealed for f64 {}
 
 impl Sample for f32 {}
-impl Sample for f64 {}
 
 #[inline]
 pub(crate) fn sf<S: Sample>(value: f64) -> S {

@@ -3,7 +3,7 @@
 > A safe, fast Rust library for pitch shifting, time stretching, formant shaping, and streaming audio.
 
 - **No `unsafe`** — `#![forbid(unsafe_code)]`
-- **`f32` and `f64`** samples
+- **`f32` samples** with a `microfft` backend
 - **Planar I/O** — independent input/output lengths
 - **Streaming** — `process`, `flush`, `seek`, and exact fixed-length rendering
 - **Numerically regression-tested** against committed reference fixtures
@@ -83,7 +83,7 @@ Feed `input_latency()` samples ahead of the processing point and read output `ou
 | `set_freq_map` | Custom input-to-output frequency map |
 | split computation | `true` argument to a preset or `configure`; adds one interval of latency |
 
-Prefer preset defaults unless you are optimizing CPU or latency. Blocks are capped at 1,048,576 samples and 256 channels; oversized configurations panic with a clear message.
+Prefer preset defaults unless you are optimizing CPU or latency. Blocks are capped at 32,768 samples and 256 channels; FFT sizes are rounded up to a power of two. Oversized configurations panic with a clear message.
 
 ## WAV CLI
 
@@ -97,10 +97,9 @@ The CLI preserves integer WAV bit depths and 32-bit float WAV. It rejects 64-bit
 
 ## Numerical checks
 
-The committed reference fixtures cover mono, stereo, three-channel audio, `f32`, `f64`, split computation, formants, custom maps, and streaming.
+The committed reference fixtures cover mono, stereo, three-channel audio, split computation, formants, custom maps, and streaming.
 
-- `f32` exact renders: single-precision round-off
-- `f64` exact renders: within `1e-10` absolute error
+- Exact renders: single-precision round-off
 - Zero-input calls: finite output is guaranteed, sample-for-sample equality is not
 
 Above `2×` stretch, phase randomization uses a deterministic PCG32 stream. The same seed reproduces the same output.

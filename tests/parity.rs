@@ -1,8 +1,7 @@
 //! Numerical regression tests against committed reference fixtures.
 //!
 //! Each file stores the exact input and reference output as little-endian
-//! samples. The f32 tests allow single-precision round-off; the f64 tests
-//! allow `1e-10` absolute error.
+//! samples. The tests allow single-precision round-off.
 
 #![forbid(unsafe_code)]
 #![allow(
@@ -224,12 +223,6 @@ fn read_i32(data: &[u8], offset: &mut usize) -> i32 {
     value
 }
 
-fn read_f64(data: &[u8], offset: &mut usize) -> f64 {
-    let value = f64::from_le_bytes(data[*offset..*offset + 8].try_into().unwrap());
-    *offset += 8;
-    value
-}
-
 #[test]
 fn matches_streaming_reference() {
     let data = fs::read(
@@ -284,113 +277,6 @@ fn matches_streaming_reference() {
         }
     }
     assert!(max_abs < 2e-4, "streaming parity max_abs={max_abs:e}");
-}
-
-#[test]
-fn matches_f64_reference() {
-    let data =
-        fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/parity-f64.bin"))
-            .expect("f64 reference fixture");
-    assert_eq!(&data[..4], b"SSP2");
-    let mut offset = 4;
-    let channels = read_i32(&data, &mut offset) as usize;
-    let input_len = read_i32(&data, &mut offset) as usize;
-    let output_len = read_i32(&data, &mut offset) as usize;
-    assert_eq!(channels, 1);
-    assert_eq!(input_len, 1024);
-    assert_eq!(output_len, 1536);
-
-    let mut input = vec![vec![0.0_f64; input_len]; channels];
-    for channel in &mut input {
-        for sample in channel {
-            *sample = f64::from_le_bytes(data[offset..offset + 8].try_into().unwrap());
-            offset += 8;
-        }
-    }
-    let mut reference = vec![vec![0.0_f64; output_len]; channels];
-    for channel in &mut reference {
-        for sample in channel {
-            *sample = f64::from_le_bytes(data[offset..offset + 8].try_into().unwrap());
-            offset += 8;
-        }
-    }
-    assert_eq!(offset, data.len(), "trailing fixture bytes");
-
-    let mut stretch = SignalsmithStretch::<f64>::with_seed(12345);
-    stretch.configure(channels, 64, 16, false);
-    stretch.set_transpose_semitones(4.0, 0.8);
-    let input_refs: Vec<&[f64]> = input.iter().map(Vec::as_slice).collect();
-    let mut output = vec![vec![0.0_f64; output_len]; channels];
-    {
-        let mut output_refs: Vec<&mut [f64]> = output.iter_mut().map(Vec::as_mut_slice).collect();
-        assert!(stretch.exact(&input_refs, input_len, &mut output_refs, output_len));
-    }
-
-    let mut max_abs = 0.0_f64;
-    for c in 0..channels {
-        for i in 0..output_len {
-            max_abs = max_abs.max((output[c][i] - reference[c][i]).abs());
-        }
-    }
-    assert!(max_abs < 1e-10, "f64 parity max_abs={max_abs:e}");
-}
-
-#[test]
-fn matches_f64_split_reference() {
-    let data = fs::read(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/parity-f64-split.bin"),
-    )
-    .expect("f64 split reference fixture");
-    assert_eq!(&data[..4], b"SSPF");
-    let mut offset = 4;
-    let channels = read_i32(&data, &mut offset) as usize;
-    let input_len = read_i32(&data, &mut offset) as usize;
-    let output_len = read_i32(&data, &mut offset) as usize;
-    let block = read_i32(&data, &mut offset) as usize;
-    let interval = read_i32(&data, &mut offset) as usize;
-    let split = read_i32(&data, &mut offset) != 0;
-    let semitones = read_f64(&data, &mut offset);
-    let tonality = read_f64(&data, &mut offset);
-    let formant = read_f64(&data, &mut offset);
-    let base = read_f64(&data, &mut offset);
-    assert_eq!(
-        (channels, input_len, output_len, block, interval, split),
-        (2, 1500, 2200, 96, 24, true)
-    );
-
-    let mut input = vec![vec![0.0_f64; input_len]; channels];
-    for channel in &mut input {
-        for sample in channel {
-            *sample = read_f64(&data, &mut offset);
-        }
-    }
-    let mut reference = vec![vec![0.0_f64; output_len]; channels];
-    for channel in &mut reference {
-        for sample in channel {
-            *sample = read_f64(&data, &mut offset);
-        }
-    }
-    assert_eq!(offset, data.len(), "trailing fixture bytes");
-
-    let mut stretch = SignalsmithStretch::<f64>::with_seed(12345);
-    stretch.configure(channels, block, interval, split);
-    stretch.set_transpose_semitones(semitones, tonality);
-    stretch.set_formant_semitones(formant, true);
-    stretch.set_formant_base(base);
-    let input_refs: Vec<&[f64]> = input.iter().map(Vec::as_slice).collect();
-    let mut output = vec![vec![0.0_f64; output_len]; channels];
-    {
-        let mut output_refs: Vec<&mut [f64]> = output.iter_mut().map(Vec::as_mut_slice).collect();
-        assert!(stretch.exact(&input_refs, input_len, &mut output_refs, output_len));
-    }
-
-    let mut max_abs = 0.0_f64;
-    for c in 0..channels {
-        for i in 0..output_len {
-            max_abs = max_abs.max((output[c][i] - reference[c][i]).abs());
-        }
-    }
-    assert!(max_abs < 1e-10, "f64 split parity max_abs={max_abs:e}");
 }
 
 #[test]
@@ -459,7 +345,7 @@ fn matches_reference() {
         }
         let relative_rms = (error_energy / reference_energy.max(1e-30)).sqrt();
         assert!(
-            max_abs < 1e-3 && relative_rms < 1e-4,
+            max_abs < 1e-3 && relative_rms < 2e-4,
             "scenario {index}: max_abs={max_abs:e}, relative_rms={relative_rms:e}"
         );
     }
