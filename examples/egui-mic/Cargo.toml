@@ -1,0 +1,13 @@
+[package]
+name = "signalsmith-stretch-egui"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+publish = false
+
+[dependencies]
+anyhow = "1"
+cpal = "0.18.2"
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
+signalsmith-stretch = { package = "signalsmith-stretch-rs", path = "../.." }

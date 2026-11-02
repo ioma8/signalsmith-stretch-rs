@@ -48,6 +48,8 @@ fn main() {
 
 A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
+A desktop microphone demo lives in [`examples/egui-mic`](https://github.com/ioma8/signalsmith-stretch-rs/tree/main/examples/egui-mic): record, shape, and play audio through the library.
+
 ## How it works
 
 ![How time stretching works: slice frames and take an FFT, spread and align phase, then inverse FFT and blend](docs/images/how-it-works.svg)

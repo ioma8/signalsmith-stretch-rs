@@ -2,3 +2,4 @@
 out/
 
 /target
+examples/egui-mic/target/
