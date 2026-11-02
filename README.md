@@ -1,17 +1,17 @@
 # Signalsmith Stretch — Rust
 
-> A safe, fast Rust library for pitch shifting, time stretching, formant shaping, and streaming audio.
+> Fast, safe, `no_std`-friendly time stretching, pitch shifting, formant shaping, and streaming.
 
-- **No `unsafe`** — `#![forbid(unsafe_code)]`
-- **`f32` samples** with a `microfft` backend
-- **Planar I/O** — independent input/output lengths
-- **Streaming** — `process`, `flush`, `seek`, and exact fixed-length rendering
-- **Numerically regression-tested** against committed reference fixtures
+- **No `unsafe`** in the crate — `#![forbid(unsafe_code)]`
+- **`f32` audio**, powered by [`microfft`](https://crates.io/crates/microfft)
+- **`std` by default**, with a `no_std + alloc` feature
+- **Planar audio**, independent input/output lengths
+- **Streaming**, seeking, flushing, and exact renders
 - **Rust 2024**, MSRV `1.97`
 
-Package: `signalsmith-stretch-rs` · Library crate: `signalsmith_stretch`
+Package: `signalsmith-stretch-rs` · Crate: `signalsmith_stretch`
 
-## Quick start
+## Time stretch in 20 lines
 
 ```toml
 [dependencies]
@@ -23,8 +23,10 @@ use signalsmith_stretch::SignalsmithStretch;
 
 fn main() {
     let sample_rate = 48_000.0_f32;
-    let output_frames = 7_200;
-    let samples: Vec<f32> = (0..4_800)
+    let input_frames = 4_800;
+    let output_frames = 7_200; // 1.5x
+
+    let samples: Vec<f32> = (0..input_frames)
         .map(|i| {
             let phase = std::f32::consts::TAU * 220.0 * i as f32 / sample_rate;
             phase.sin() * 0.3
@@ -37,26 +39,29 @@ fn main() {
 
     let mut stretch = SignalsmithStretch::<f32>::with_seed(12345);
     stretch.preset_default(1, sample_rate, false);
-    stretch.set_transpose_semitones(4.0, 8_000.0 / sample_rate);
 
-    assert!(stretch.exact(&input, samples.len(), &mut output, output_frames));
+    assert!(stretch.exact(&input, input_frames, &mut output, output_frames));
 }
 ```
 
-`exact()` performs seek + process + flush, and returns `false` if the input is too short. A larger compiled example is in [`examples/basic.rs`](examples/basic.rs).
+`exact()` performs the seek, process, and flush sequence. Pitch and formants stay unchanged unless you call `set_transpose_semitones` or `set_formant_semitones`.
+
+A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
 ## `no_std`
 
-The default `std` feature is optional:
-
 ```toml
 [dependencies]
-signalsmith-stretch-rs = { version = "1.3", default-features = false, features = ["no_std"] }
+signalsmith-stretch-rs = {
+    version = "1.3",
+    default-features = false,
+    features = ["no_std"],
+}
 ```
 
-`no_std` uses `alloc`, so the target must provide a global allocator. It also needs atomic compare-and-swap for `Arc` and `libm` for floating-point math. The CLI is only available with `std`.
+The `no_std` feature uses `alloc` and `libm`. The target needs a global allocator and atomic compare-and-swap for `Arc`. The CLI is only available with `std`.
 
-Without `std`, the default constructor seeds from zero. Use `with_seed()` for reproducible output.
+Use `with_seed()` on `no_std` for reproducible phase randomization; the default constructor uses seed `0`.
 
 ## Streaming
 
@@ -81,24 +86,23 @@ fn main() {
 }
 ```
 
-Feed `input_latency()` samples ahead of the processing point and read output `output_latency()` samples behind it.
+Feed `input_latency()` samples ahead and read `output_latency()` samples behind the processing point.
 
-## Configuration
+## Controls
 
 | Call | Purpose |
 | --- | --- |
 | `preset_default` | 120 ms block / 30 ms interval |
-| `preset_cheaper` | 100 ms block / 40 ms interval, lower CPU |
-| `configure` | Explicit block and interval sizes |
-| `set_transpose_semitones` | Pitch shift, with optional tonality limit |
-| `set_formant_semitones` | Formant shift, with optional pitch compensation |
-| `set_formant_base` | Rough fundamental, or `0.0` for automatic estimation |
-| `set_freq_map` | Custom input-to-output frequency map |
-| split computation | `true` argument to a preset or `configure`; adds one interval of latency |
+| `preset_cheaper` | 100 ms block / 40 ms interval |
+| `configure` | Explicit block and interval |
+| `set_transpose_semitones` | Pitch shift |
+| `set_formant_semitones` | Formant shift |
+| `set_formant_base` | Fundamental hint, or `0.0` for auto |
+| `set_freq_map` | Custom frequency map |
 
-Prefer preset defaults unless you are optimizing CPU or latency. Blocks are capped at 32,768 samples and 256 channels; FFT sizes are rounded up to a power of two. Oversized configurations panic with a clear message.
+Blocks are capped at 32,768 samples and 256 channels. FFT sizes round up to a power of two.
 
-## WAV CLI
+## CLI
 
 ```sh
 cargo run --release --features cli --bin stretch -- \
@@ -106,32 +110,31 @@ cargo run --release --features cli --bin stretch -- \
     input.wav output.wav
 ```
 
-The CLI preserves integer WAV bit depths and 32-bit float WAV. It rejects 64-bit float WAV with an explicit error.
+Preserves integer WAV bit depths and 32-bit float WAV. 64-bit float WAV is rejected explicitly.
 
-## Numerical checks
-
-The committed reference fixtures cover mono, stereo, three-channel audio, split computation, formants, custom maps, and streaming.
-
-- Exact renders: single-precision round-off
-- Zero-input calls: finite output is guaranteed, sample-for-sample equality is not
-
-Above `2×` stretch, phase randomization uses a deterministic PCG32 stream. The same seed reproduces the same output.
-
-## Build and verify
+## Verification
 
 ```sh
 cargo test --all-targets --all-features
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --doc --all-features
 cargo fmt --all -- --check
-RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --all-features
 ```
 
-A throughput probe is included:
+Bare-metal compile check:
+
+```sh
+cargo check --no-default-features --features no_std --lib \
+    --target riscv32imac-unknown-none-elf
+```
+
+Benchmark:
 
 ```sh
 cargo run --release --example bench
 ```
+
+Reference fixtures cover exact renders and streaming. `f32` FFT rounding is expected; zero-input calls guarantee finite output, not sample-for-sample equality.
 
 ## License
 
