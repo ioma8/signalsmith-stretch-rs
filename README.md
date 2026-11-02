@@ -50,21 +50,17 @@ A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
 ## How it works
 
-![Original waveform and a 1.5 times longer stretched waveform with the same cycle spacing](docs/images/how-it-works.svg)
+![Original and stretched waveforms with the same cycle spacing](docs/images/how-it-works.svg)
 
 Time stretching changes **duration—and therefore tempo—but not pitch**. The sound is cut into overlapping snapshots, moved farther apart on the timeline, and blended back together.
 
 1. **Slice** — capture overlapping snapshots of the sound.
 2. **Stretch** — move the snapshots farther apart.
-3. **Blend** — overlap-add them into one smooth signal.
+3. **Blend** — join them back into one smooth sound.
 
-During blending, phase is advanced so the cycles line up instead of canceling. That keeps the pitch stable even though the timeline is longer.
+During blending, the waveform is nudged so the cycles line up. That keeps the pitch unchanged even though the sound is longer.
 
-Signalsmith Stretch adds per-band phase prediction and formant handling for cleaner transients and voices.
-
-![Time stretch changes duration, pitch shift changes pitch](docs/images/time-vs-pitch.svg)
-
-**Time stretch** moves only the duration. **Pitch shift** moves only the pitch. The two controls are independent, so you can use either one—or both.
+Pitch shifting is a separate control: it changes pitch without changing duration.
 
 ## `no_std`
 
