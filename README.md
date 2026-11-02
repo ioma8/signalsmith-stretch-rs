@@ -50,15 +50,15 @@ A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
 ## How it works
 
-![Three steps: slice overlapping frames, spread them apart, and blend them into a longer sound with the same pitch](docs/images/how-it-works.svg)
+![How time stretching works: slice frames and take an FFT, spread and align phase, then inverse FFT and blend](docs/images/how-it-works.svg)
 
 Time stretching changes **duration—and therefore tempo—but not pitch**. The sound is cut into overlapping snapshots, moved farther apart on the timeline, and blended back together.
 
-1. **Slice** — capture overlapping snapshots of the sound.
-2. **Stretch** — move the snapshots farther apart.
-3. **Blend** — join them back into one smooth sound.
+1. **Slice + FFT** — overlapping snapshots of the sound become frequency bands and phases.
+2. **Spread** — move the snapshots farther apart and align their phase.
+3. **IFFT + blend** — turn the snapshots back into audio and overlap-add them.
 
-During blending, the waveform is nudged so the cycles line up. That keeps the pitch unchanged even though the sound is longer.
+The phase alignment keeps the cycles continuous, so the pitch stays the same even though the sound is longer.
 
 Pitch shifting is a separate control: it changes pitch without changing duration.
 
