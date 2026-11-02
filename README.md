@@ -155,6 +155,8 @@ Benchmark:
 cargo run --release --example bench
 ```
 
+ESP32: see the [QEMU benchmark setup and results](docs/esp32-qemu-benchmark.md) — about **2× real-time** for 48 kHz stereo at 1.5× stretch under emulation.
+
 Reference fixtures cover exact renders and streaming. `f32` FFT rounding is expected; zero-input calls guarantee finite output, not sample-for-sample equality.
 
 ## License
