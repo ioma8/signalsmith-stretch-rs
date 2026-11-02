@@ -1,0 +1,23 @@
+//! Safe Rust audio pitch/time stretching.
+//!
+//! Construct a [`SignalsmithStretch`], configure it with a preset or explicit
+//! block sizes, then feed planar input and output buffers to
+//! [`SignalsmithStretch::process`].
+//!
+//! The implementation contains no `unsafe`, uses `rustfft` for the FFT
+//! primitives, and is deterministic for a given seed and configuration.
+
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+mod readme_doctests {}
+
+mod fft;
+mod sample;
+mod stft;
+mod stretch;
+
+pub use sample::Sample;
+pub use stretch::{MAX_BLOCK_SAMPLES, MAX_CHANNELS, SignalsmithStretch, VERSION};
