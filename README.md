@@ -1,17 +1,24 @@
 # Signalsmith Stretch — Rust
 
-> Real-time time stretching, pitch shifting, formant shaping, and streaming for desktop and embedded audio.
+> Real-time, `no_std`-friendly time stretching and pitch shifting for desktop and embedded audio.
 
-- **Real-time ready** — `process`, `flush`, and `seek` do not allocate after `configure`
-- **MCU-friendly** — `no_std + alloc`, `f32`, and [`microfft`](https://crates.io/crates/microfft)
-- **No `unsafe`** in the crate — `#![forbid(unsafe_code)]`
-- **No locks, threads, or I/O** on the processing path
-- **Planar audio**, independent input/output lengths
-- **Rust 2024**, MSRV `1.97`
+**No `unsafe`** · **`f32` + [`microfft`](https://crates.io/crates/microfft)** · **`no_std + alloc`** · **real-time ready** · **MSRV 1.97**
 
 Package: `signalsmith-stretch-rs` · Crate: `signalsmith_stretch`
 
-## Time stretch in 20 lines
+## Contents
+
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [`no_std`](#no_std)
+- [Real-time and MCU/embedded](#real-time-and-mcuembedded)
+- [Streaming](#streaming)
+- [Controls](#controls)
+- [CLI](#cli)
+- [Verification](#verification)
+- [License](#license)
+
+## Quick start
 
 ```toml
 [dependencies]
@@ -46,23 +53,19 @@ fn main() {
 
 `exact()` performs the seek, process, and flush sequence. Pitch and formants stay unchanged unless you call `set_transpose_semitones` or `set_formant_semitones`.
 
-A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
-
-A desktop microphone demo lives in [`examples/egui-mic`](https://github.com/ioma8/signalsmith-stretch-rs/tree/main/examples/egui-mic): record, shape, and play audio through the library.
+Compiled example: [`examples/basic.rs`](examples/basic.rs) · [microphone demo](https://github.com/ioma8/signalsmith-stretch-rs/tree/main/examples/egui-mic).
 
 ## How it works
 
 ![How time stretching works: slice frames and take an FFT, spread and align phase, then inverse FFT and blend](docs/images/how-it-works.svg)
 
-Time stretching changes **duration—and therefore tempo—but not pitch**. The sound is cut into overlapping snapshots, moved farther apart on the timeline, and blended back together.
+Time stretching changes **duration—and therefore tempo—but not pitch**.
 
-1. **Slice + FFT** — overlapping snapshots of the sound become frequency bands and phases.
-2. **Spread** — move the snapshots farther apart and align their phase.
-3. **IFFT + blend** — turn the snapshots back into audio and overlap-add them.
+1. **Slice + FFT** — overlapping snapshots become frequency bands and phases.
+2. **Spread** — move snapshots apart and align their phase.
+3. **IFFT + blend** — rebuild audio and overlap-add one longer sound.
 
-The phase alignment keeps the cycles continuous, so the pitch stays the same even though the sound is longer.
-
-Pitch shifting is a separate control: it changes pitch without changing duration.
+Phase alignment keeps the cycles continuous; pitch shifting is a separate control.
 
 ## `no_std`
 
@@ -75,16 +78,13 @@ signalsmith-stretch-rs = {
 }
 ```
 
-The `no_std` feature uses `alloc` and `libm`. The target needs a global allocator and atomic compare-and-swap for `Arc`. The CLI is only available with `std`.
-
-Use `with_seed()` on `no_std` for reproducible phase randomization; the default constructor uses seed `0`.
+The `no_std` feature uses `alloc` and `libm`; the target needs a global allocator and atomic CAS for `Arc`. The CLI requires `std`. Use `with_seed()` for reproducible output; the no_std default seed is `0`.
 
 ## Real-time and MCU/embedded
 
-`configure()` or a preset allocates all working buffers up front. After that, the streaming path is allocation-free:
-`process()`, `flush()`, and `seek()` only touch preallocated state. No locks, threads, or I/O are used.
+`configure()` or a preset allocates all working buffers up front. After that, `process()`, `flush()`, and `seek()` are allocation-free and use no locks, threads, or I/O.
 
-The `no_std` build compiles for bare-metal MCU targets with `alloc` and atomics. `exact()` is a convenience API and allocates a small temporary channel vector; use `process()`/`flush()` in a real-time callback.
+The `no_std` build targets bare-metal MCUs with `alloc` and atomics. `exact()` allocates a small channel vector; use `process()`/`flush()` in a real-time callback.
 
 ## Streaming
 
