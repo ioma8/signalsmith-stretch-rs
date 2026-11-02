@@ -48,6 +48,23 @@ fn main() {
 
 A complete compiled example: [`examples/basic.rs`](examples/basic.rs).
 
+## How it works
+
+![Signal flow through overlapping frames, spectral analysis, re-spaced frames, and overlap-add](docs/images/how-it-works.svg)
+
+Time stretching changes **duration—and therefore tempo—but not pitch**. The signal is cut into overlapping, windowed frames, then those frames are placed on a longer or shorter timeline and blended back together.
+
+1. **Slice** — overlapping windows preserve the local sound at each moment.
+2. **Analyse** — an FFT turns each frame into frequency bands and phases.
+3. **Re-space** — frames are advanced more slowly or quickly through the input.
+4. **Overlap-add** — the windows are summed, with phase advanced so cycles stay continuous instead of canceling.
+
+Signalsmith Stretch extends the classic phase vocoder with per-band phase prediction and formant handling, which helps keep transients and voiced sounds clean.
+
+![Time stretch changes duration, pitch shift changes pitch](docs/images/time-vs-pitch.svg)
+
+**Time stretch** moves only the duration. **Pitch shift** moves only the pitch. The two controls are independent, so you can use either one—or both.
+
 ## `no_std`
 
 ```toml
