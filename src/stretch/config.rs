@@ -159,7 +159,7 @@ impl<S: Sample> SignalsmithStretch<S> {
             stft.synthesis_latency() + usize::from(split_computation) * interval_samples;
 
         let channel_bands = vec![Band::default(); band_entries];
-        let peaks = Vec::with_capacity(bands / 2);
+        let peaks = Vec::with_capacity(bands);
         let energy = vec![S::zero(); bands];
         let smoothed_energy = vec![S::zero(); bands];
         let output_map = vec![PitchMapPoint::default(); bands];

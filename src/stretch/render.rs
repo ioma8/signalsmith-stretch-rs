@@ -35,6 +35,8 @@ impl<S: Sample> SignalsmithStretch<S> {
 
     /// Supplies pre-roll input without producing output.
     ///
+    /// This method performs no allocation after configuration.
+    ///
     /// # Panics
     ///
     /// Panics if the stretcher is not configured, the channel count or a
@@ -133,6 +135,8 @@ impl<S: Sample> SignalsmithStretch<S> {
 
     /// Processes planar input into planar output.
     ///
+    /// This method performs no allocation after configuration.
+    ///
     /// # Panics
     ///
     /// Panics if the stretcher is not configured, the input/output channel
@@ -148,6 +152,8 @@ impl<S: Sample> SignalsmithStretch<S> {
     }
 
     /// Reads the remaining output, assuming zero input for long flushes.
+    ///
+    /// This method performs no allocation after configuration.
     ///
     /// # Panics
     ///

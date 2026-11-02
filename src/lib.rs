@@ -7,7 +7,9 @@
 //! The implementation contains no `unsafe`, uses `microfft` for the FFT
 //! primitives, and is deterministic for a given seed and configuration.
 //! With the `no_std` feature it uses `alloc` and `libm`; the CLI requires
-//! `std`.
+//! `std`. The streaming path is designed for real-time and MCU/embedded
+//! audio: `configure` or a preset allocates once, then `process`, `flush`,
+//! and `seek` operate on preallocated state.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]

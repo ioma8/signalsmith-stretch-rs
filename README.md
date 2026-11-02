@@ -1,12 +1,12 @@
 # Signalsmith Stretch — Rust
 
-> Fast, safe, `no_std`-friendly time stretching, pitch shifting, formant shaping, and streaming.
+> Real-time time stretching, pitch shifting, formant shaping, and streaming for desktop and embedded audio.
 
+- **Real-time ready** — `process`, `flush`, and `seek` do not allocate after `configure`
+- **MCU-friendly** — `no_std + alloc`, `f32`, and [`microfft`](https://crates.io/crates/microfft)
 - **No `unsafe`** in the crate — `#![forbid(unsafe_code)]`
-- **`f32` audio**, powered by [`microfft`](https://crates.io/crates/microfft)
-- **`std` by default**, with a `no_std + alloc` feature
+- **No locks, threads, or I/O** on the processing path
 - **Planar audio**, independent input/output lengths
-- **Streaming**, seeking, flushing, and exact renders
 - **Rust 2024**, MSRV `1.97`
 
 Package: `signalsmith-stretch-rs` · Crate: `signalsmith_stretch`
@@ -62,6 +62,13 @@ signalsmith-stretch-rs = {
 The `no_std` feature uses `alloc` and `libm`. The target needs a global allocator and atomic compare-and-swap for `Arc`. The CLI is only available with `std`.
 
 Use `with_seed()` on `no_std` for reproducible phase randomization; the default constructor uses seed `0`.
+
+## Real-time and MCU/embedded
+
+`configure()` or a preset allocates all working buffers up front. After that, the streaming path is allocation-free:
+`process()`, `flush()`, and `seek()` only touch preallocated state. No locks, threads, or I/O are used.
+
+The `no_std` build compiles for bare-metal MCU targets with `alloc` and atomics. `exact()` is a convenience API and allocates a small temporary channel vector; use `process()`/`flush()` in a real-time callback.
 
 ## Streaming
 
